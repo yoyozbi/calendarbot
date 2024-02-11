@@ -6,3 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+poise = "0.6.1"
+shuttle-runtime = "0.38.0"
+shuttle-secrets = "0.38.0"
+tokio = "1.36.0"
+shuttle-serenity = "0.38.0"
+log = "0.4.20"
+envy = "0.4.2"
+serde = { version = "1.0.196", features = ["derive"] }
+anyhow = "1.0.79"
