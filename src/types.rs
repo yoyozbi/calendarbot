@@ -1,12 +1,8 @@
-use anyhow::{anyhow, Error, Result};
+use anyhow::{Error, Result};
 use poise::serenity_prelude as serenity;
 
-use std::env;
-use log::debug;
-use serde::Deserialize;
 use shuttle_secrets::SecretStore;
 
-use crate::commands;
 use crate::secrets::SecretsUtils;
 
 #[derive(Debug)]

@@ -5,8 +5,7 @@ mod commands;
 pub mod types;
 pub mod secrets;
 
-use std::ops::Deref;
-use anyhow::{Error, Result};
+use anyhow::Error;
 use poise::{async_trait, serenity_prelude as serenity};
 use shuttle_serenity::ShuttleSerenity;
 
@@ -20,7 +19,7 @@ type Context<'a> = poise::Context<'a, types::Data, Error>;
 struct Bot {}
 #[async_trait]
 impl EventHandler for Bot {
-    async fn ready(&self, ctx: serenity::Context, ready: serenity::Ready){
+    async fn ready(&self, _ctx: serenity::Context, ready: serenity::Ready){
         info!("{} is connected!", ready.user.name);
     }
 }
@@ -42,17 +41,6 @@ async fn on_error(error: poise::FrameworkError<'_, types::Data, Error>) {
     }
 }
 
-#[poise::command(slash_command, prefix_command)]
-async fn age(
-    ctx: Context<'_>,
-    #[description = "Selected user"] user: Option<serenity::User>,
-) -> Result<()> {
-    let u = user.as_ref().unwrap_or_else(|| ctx.author());
-    let response = format!("{}'s account was created at {}", u.name, u.created_at());
-    ctx.say(response).await?;
-    Ok(())
-}
-
 #[shuttle_runtime::main]
 async fn main(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> ShuttleSerenity{
     let token = SecretsUtils::get_secret("DISCORD_TOKEN", &secret_store).expect("DISCORD_TOKEN not found");
@@ -62,7 +50,8 @@ async fn main(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> ShuttleS
         .options(poise::FrameworkOptions {
             commands: vec![
                 commands::utilities::help(),
-                commands::utilities::uptime()
+                commands::utilities::uptime(),
+                commands::utilities::age()
             ],
             on_error: |error | {
                 Box::pin(async move {
@@ -94,7 +83,7 @@ async fn main(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> ShuttleS
             ..Default::default()
 
         })
-        .setup(move |ctx, ready, framework | {
+        .setup(move |ctx, _ready, framework | {
             Box::pin(async move {
                 let data = types::Data::new(&secret_store)?;
                 debug!("Registering commands..");

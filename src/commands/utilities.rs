@@ -1,7 +1,6 @@
-use crate::{Context, Error};
-use poise::serenity_prelude as serenity;
+use crate::Context;
 use anyhow::Result;
-use crate::types::Data;
+use poise::serenity_prelude as serenity;
 
 
 #[poise::command(prefix_command, slash_command, category = "Utilities", track_edits)]
@@ -47,3 +46,15 @@ pub async fn uptime(
 
     Ok(())
 }
+
+#[poise::command(slash_command, prefix_command, category = "Utilities")]
+pub async fn age(
+    ctx: Context<'_>,
+    #[description = "Selected user"] user: Option<serenity::User>,
+) -> Result<()> {
+    let u = user.as_ref().unwrap_or_else(|| ctx.author());
+    let response = format!("{}'s account was created at {}", u.name, u.created_at());
+    ctx.say(response).await?;
+    Ok(())
+}
+

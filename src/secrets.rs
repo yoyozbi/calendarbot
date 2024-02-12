@@ -1,5 +1,4 @@
 use std::env;
-use poise::futures_util::TryFutureExt;
 use shuttle_secrets::SecretStore;
 use anyhow::{anyhow, Result};
 
