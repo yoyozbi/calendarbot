@@ -3,6 +3,10 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";
     systems.url = "github:nix-systems/default";
     devenv.url = "github:cachix/devenv";
+    fenix = {
+        url = "github:nix-community/fenix";
+        inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   nixConfig = {
@@ -30,22 +34,13 @@
               modules = [
                 {
                   # https://devenv.sh/reference/options/
-                  packages = [ pkgs.openssl.dev pkgs.pkgconfig pkgs.dbus.dev ];
+                  packages = [ pkgs.openssl.dev pkgs.pkgconfig pkgs.dbus.dev pkgs.sqlx-cli ];
                   languages.rust = {
                     enable = true;
-                  };
-                  services.postgres = {
-                      enable = true;
-                      package = pkgs.postgresql_15;
-                      initialDatabases = [{ name = "mydb"; }];
-                      extensions = extensions: [
-                        extensions.postgis
-                        extensions.timescaledb
-                      ];
-                      settings.shared_preload_libraries = "timescaledb";
-                      initialScript = "CREATE EXTENSION IF NOT EXISTS timescaledb;";
+                    channel = "stable";
                   };
                   env.OPENSSL_DEV=pkgs.openssl.dev;
+									env.DATABASE_URL="postgres://postgres:postgres@localhost:21712";
 
                 }
               ];

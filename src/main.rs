@@ -5,6 +5,7 @@ This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
 This is free software, and you are welcome to redistribute it
  */
 mod commands;
+mod db;
 
 pub mod types;
 pub mod secrets;
@@ -16,6 +17,7 @@ use shuttle_serenity::ShuttleSerenity;
 use log::{debug, info};
 use poise::serenity_prelude::EventHandler;
 use shuttle_secrets::SecretStore;
+use crate::db::DB;
 use crate::secrets::SecretsUtils;
 
 type Context<'a> = poise::Context<'a, types::Data, Error>;
@@ -46,7 +48,11 @@ async fn on_error(error: poise::FrameworkError<'_, types::Data, Error>) {
 }
 
 #[shuttle_runtime::main]
-async fn main(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> ShuttleSerenity{
+async fn main(#[shuttle_secrets::Secrets] secret_store: SecretStore, #[shuttle_shared_db::Postgres] pool: sqlx::PgPool) -> ShuttleSerenity{
+    let db = DB {pool};
+
+    db.migrate().await?;
+
     let token = SecretsUtils::get_secret("DISCORD_TOKEN", &secret_store).expect("DISCORD_TOKEN not found");
     let intents = serenity::GatewayIntents::non_privileged();
 

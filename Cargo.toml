@@ -18,3 +18,5 @@ envy = "0.4.2"
 serde = { version = "1.0.196", features = ["derive"] }
 anyhow = "1.0.79"
 sqlx = "0.7.3"
+shuttle-shared-db = { version = "0.38.0", features = ["postgres", "sqlx"] }
+chrono-tz = "0.8.6"
