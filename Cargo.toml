@@ -1,5 +1,7 @@
 [package]
 name = "calendarbot"
+authors = ["Yohan Zbinden <yohan@yohanzbinden.ch>"]
+license = "GPL-3"
 version = "0.1.0"
 edition = "2021"
 
