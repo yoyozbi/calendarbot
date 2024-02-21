@@ -1,10 +1,9 @@
--- Add migration script here
 CREATE TABLE guilds (
     id INTEGER PRIMARY KEY,
     discordId varchar(64) NOT NULL
 );
 
-CREATE TABLE Calendars (
+CREATE TABLE calendars (
     id INTEGER PRIMARY KEY,
     googleId varchar(90) NOT NULL,
     timezone varchar(30) DEFAULT 'Utc',

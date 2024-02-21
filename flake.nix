@@ -34,13 +34,12 @@
               modules = [
                 {
                   # https://devenv.sh/reference/options/
-                  packages = [ pkgs.openssl.dev pkgs.pkgconfig pkgs.dbus.dev pkgs.sqlx-cli ];
+                  packages = [ pkgs.openssl.dev pkgs.pkgconfig pkgs.dbus.dev pkgs.postgresql ];
                   languages.rust = {
                     enable = true;
                     channel = "stable";
                   };
                   env.OPENSSL_DEV=pkgs.openssl.dev;
-									env.DATABASE_URL="postgres://postgres:postgres@localhost:21712";
 
                 }
               ];

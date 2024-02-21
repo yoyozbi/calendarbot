@@ -1,3 +1,5 @@
+use std::env;
+
 /*
 Calendarbot  Copyright (C) 2023 Zbinden Yohan
 
@@ -7,10 +9,6 @@ This is free software, and you are welcome to redistribute it
 use anyhow::{Error, Result};
 use poise::serenity_prelude as serenity;
 
-use shuttle_secrets::SecretStore;
-
-use crate::secrets::SecretsUtils;
-
 #[derive(Debug)]
 pub struct Data {
     pub application_id: serenity::UserId,
@@ -19,17 +17,17 @@ pub struct Data {
 }
 
 impl Data {
-    pub fn new(secret_store: &SecretStore) -> Result<Data> {
+    pub fn new() -> Result<Data> {
         Ok(Self {
-            application_id: SecretsUtils::get_secret("APPLICATION_ID", secret_store)
+            application_id: env::var("APPLICATION_ID")
                 .expect("APPLICATION_ID not found")
                 .parse::<u64>()?
                 .into(),
-            client_id: SecretsUtils::get_secret("CLIENT_ID", secret_store)
+            client_id: env::var("CLIENT_ID")
                 .expect("CLIENT_ID not found")
                 .parse::<u64>()?
                 .into(),
-            bot_start_time: std::time::Instant::now()
+            bot_start_time: std::time::Instant::now(),
         })
     }
 }
@@ -37,3 +35,4 @@ impl Data {
 pub type Context<'a> = poise::Context<'a, Data, Error>;
 
 pub const EMBED_COLOR: (u8, u8, u8) = (0xb7, 0x47, 0x00);
+
