@@ -1,21 +1,30 @@
+# Set the architecture argument (arm64, i.e. aarch64 as default)
+# For amd64, i.e. x86_64, you can append a flag when invoking the build `... --build-arg "ARCH=x86_64"`
+ARG ARCH=aarch64
+ARG BASE_TAG=latest-arm64
 
 FROM rust:1.76 AS build
-RUN USER=root cargo new --bin calendarbot
 WORKDIR /app
 
-COPY Cargo.lock Cargo.lock
-COPY Cargo.toml Cargo.toml
+RUN apt-get update -y && apt-get install -y libpq5
+RUN touch .env
 
-RUN cargo build --release
-RUN rm src/*.rs
-
-COPY src/ src/
-
-RUN rm ./target/release/deps/calendarbot*
-RUN cargo build --release
+COPY . .
+RUN cargo build --release 
 
 
-FROM ghcr.io/distroless/cc-debian11
-COPY --from=builder /app/target/release/calendarbot /usr/local/bin/calendarbot
+FROM debian:trixie-slim
+WORKDIR /app
 
-CMD ["calendarbot"]
+RUN apt-get update -y && apt-get install -y libpq5
+
+RUN useradd -u 1000 runner
+USER runner
+
+
+COPY --from=build /app/target/release/calendarbot .
+
+COPY --from=build /app/.env ./.env
+
+ENTRYPOINT ["/app/calendarbot"]
+

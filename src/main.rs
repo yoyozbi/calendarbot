@@ -12,6 +12,7 @@ pub mod types;
 use anyhow::Error;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations};
 use poise::serenity_prelude as serenity;
 use std::env;
 
@@ -19,6 +20,8 @@ use dotenvy::dotenv;
 use log::{debug, info};
 
 type Context<'a> = poise::Context<'a, types::Data, Error>;
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/");
 
 async fn on_error(error: poise::FrameworkError<'_, types::Data, Error>) {
     // This is our custom error handler
