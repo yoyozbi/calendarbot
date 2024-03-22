@@ -34,16 +34,24 @@
               modules = [
                 {
                   pre-commit.hooks = {
-				    clippy.enable = true;
-					cargo-check.enable = true;
-					rustfmt.enable = true;
-				  };
+				    				clippy.enable = true;
+										cargo-check.enable = true;
+										rustfmt.enable = true;
+										docker = {
+											enable = true;
+											name ="Docker linting";
+											entry = "ghcr.io/hadolint/hadolint hadolint";
+											files="Dockerfile";
+											language="docker_image";
+											pass_filenames = false;
+										};
+				  				};
                   # https://devenv.sh/reference/options/
-                  packages = [ pkgs.openssl.dev pkgs.pkgconfig pkgs.dbus.dev pkgs.postgresql ];
+                  packages = [ pkgs.openssl.dev pkgs.pkgconfig pkgs.dbus.dev pkgs.postgresql pkgs.hadolint ];
                   languages.rust = {
                     enable = true;
                     channel = "stable";
-					components = ["rustfmt" "clippy"];
+										components = ["rustfmt" "clippy"];
                   };
                   env.OPENSSL_DEV=pkgs.openssl.dev;
                 }
