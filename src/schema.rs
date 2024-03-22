@@ -28,8 +28,4 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(
-    calendars,
-    guilds,
-    guilds_calendars,
-);
+diesel::allow_tables_to_appear_in_same_query!(calendars, guilds, guilds_calendars,);

@@ -8,7 +8,6 @@ use crate::Context;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 
-
 #[poise::command(prefix_command, slash_command, category = "Utilities", track_edits)]
 pub async fn help(
     ctx: Context<'_>,
@@ -27,14 +26,13 @@ pub async fn help(
             extra_text_at_bottom,
             ephemeral: true,
             ..Default::default()
-        }
-    ).await?;
+        },
+    )
+    .await?;
     Ok(())
 }
 #[poise::command(prefix_command, slash_command, category = "Utilities", track_edits)]
-pub async fn uptime(
-    ctx: Context<'_>,
-) -> Result<()> {
+pub async fn uptime(ctx: Context<'_>) -> Result<()> {
     let uptime = std::time::Instant::now() - ctx.data().bot_start_time;
 
     let div_mod = |a, b| (a / b, a % b);
@@ -48,7 +46,7 @@ pub async fn uptime(
         "Uptime: {}d {}h {}m {}s",
         days, hours, minutes, seconds
     ))
-        .await?;
+    .await?;
 
     Ok(())
 }
@@ -63,4 +61,3 @@ pub async fn age(
     ctx.say(response).await?;
     Ok(())
 }
-

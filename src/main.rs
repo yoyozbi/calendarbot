@@ -46,11 +46,13 @@ async fn main() {
     env_logger::init();
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url)
+    let connection = PgConnection::establish(&database_url)
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
 
     let token = env::var("DISCORD_TOKEN").expect("DISCORD_TOKEN not found");
     let intents = serenity::GatewayIntents::non_privileged();
+
+    let data = types::Data::new(connection).expect("Unable to load config!");
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
@@ -90,7 +92,6 @@ async fn main() {
         })
         .setup(move |ctx, ready, framework| {
             Box::pin(async move {
-                let data = types::Data::new()?;
                 debug!("Registering commands..");
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
 
