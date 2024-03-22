@@ -1,12 +1,8 @@
-# Set the architecture argument (arm64, i.e. aarch64 as default)
-# For amd64, i.e. x86_64, you can append a flag when invoking the build `... --build-arg "ARCH=x86_64"`
-ARG ARCH=aarch64
-ARG BASE_TAG=latest-arm64
 
 FROM rust:1.76 AS build
 WORKDIR /app
 
-RUN apt-get update -y && apt-get install -y libpq5
+RUN apt-get update -y && apt-get install -y --no-install-recommends libpq5=15.6-0+deb12u1
 RUN touch .env
 
 COPY . .
@@ -16,7 +12,7 @@ RUN cargo build --release
 FROM debian:trixie-slim
 WORKDIR /app
 
-RUN apt-get update -y && apt-get install -y libpq5
+RUN apt-get update -y && apt-get install -y --no-install-recommends libpq5=15.6-0+deb12u1
 
 RUN useradd -u 1000 runner
 USER runner

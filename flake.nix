@@ -46,13 +46,6 @@
 					components = ["rustfmt" "clippy"];
                   };
                   env.OPENSSL_DEV=pkgs.openssl.dev;
-                  enterShell = ''
-                    cargo install cargo-deny
-                    cargo install cargo-outdated
-                    cargo install cargo-udeps
-                    cargo install cargo-audit
-                    cargo install cargo-pants
-                  '';
                 }
               ];
             };
