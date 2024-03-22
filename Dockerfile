@@ -12,7 +12,9 @@ RUN cargo build --release
 FROM debian:trixie-slim
 WORKDIR /app
 
-RUN apt-get update -y && apt-get install -y --no-install-recommends libpq5=15.6-0+deb12u1
+RUN apt-get update -y && apt-get install -y --no-install-recommends libpq5=15.6-0+deb12u1 \
+	&& apt-get clean \
+	&& rm -rf /var/lib/apt/lists/*
 
 RUN useradd -u 1000 runner
 USER runner
