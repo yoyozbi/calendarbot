@@ -40,7 +40,7 @@
 										docker = {
 											enable = true;
 											name ="Docker linting";
-											entry = "ghcr.io/hadolint/hadolint hadolint";
+											entry = "ghcr.io/hadolint/hadolint hadolint ./Dockerfile";
 											files="Dockerfile";
 											language="docker_image";
 											pass_filenames = false;
