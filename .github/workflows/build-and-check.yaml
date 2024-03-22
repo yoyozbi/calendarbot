@@ -34,9 +34,9 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
+          tags: ghcr.io/yoyozbi/calendarbot
           cache-from: type=registry,ref=yoyozbi/calendarbot:buildcache
           cache-to: type=registry,ref=yoyozbi/calendarbot:buildcache,mode=max
-          tags: ${{ env.image }}
   check:
     runs-on: ubuntu-latest
     steps:
