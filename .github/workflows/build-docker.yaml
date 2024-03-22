@@ -29,4 +29,6 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
+          cache-from: type=registry,ref=yoyozbi/calendarbot:latest
+          cache-to: type=inline
           tags: ${{ env.image }}
