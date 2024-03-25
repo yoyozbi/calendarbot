@@ -34,7 +34,6 @@
               modules = [
                 {
                   pre-commit.hooks = {
-				    				clippy.enable = true;
 										cargo-check.enable = true;
 										rustfmt.enable = true;
 										docker = {
