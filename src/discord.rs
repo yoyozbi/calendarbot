@@ -7,6 +7,7 @@ use google_calendar3::api::Event;
 use google_calendar3::chrono::NaiveDate;
 use log::{debug, error, info};
 use poise::serenity_prelude as serenity;
+use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use tokio::sync::mpsc;
@@ -29,6 +30,7 @@ async fn on_error(error: poise::FrameworkError<'_, types::Data, Error>) {
     }
 }
 
+#[derive(Clone)]
 struct LocalCache {
     cache: Arc<serenity::Cache>,
     client: Arc<serenity::Http>,
@@ -52,18 +54,10 @@ impl serenity::CacheHttp for LocalCache {
     }
 }
 
-#[derive(Debug)]
-enum Command {
-    SendChannel {
-        id: u64,
-        message: serenity::CreateMessage,
-    },
-}
-
 pub struct Discord {
     token: String,
     intents: serenity::GatewayIntents,
-    calendar_cache: Arc<Mutex<BTreeMap<String, Vec<Event>>>>,
+    cache: Arc<Mutex<Option<LocalCache>>>,
 }
 
 impl Discord {
@@ -71,7 +65,7 @@ impl Discord {
         Self {
             token,
             intents: gateway_intents,
-            calendar_cache: Arc::new(Mutex::new(BTreeMap::new())),
+            cache: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -80,9 +74,8 @@ impl Discord {
         calendar_rx: mpsc::Receiver<UpdateCalendarEvent>,
         data: types::Data,
     ) -> serenity::Client {
-        let (worker_tx, worker_rx) = mpsc::channel::<Command>(200);
-        let worker_clone = worker_tx.clone();
-        let calendar_cache = self.calendar_cache.clone();
+        let cache_clone = self.cache.clone();
+
         let framework = poise::Framework::builder()
             .options(poise::FrameworkOptions {
                 commands: vec![
@@ -121,9 +114,12 @@ impl Discord {
             })
             .setup(move |ctx, ready, framework| {
                 Box::pin(async move {
-                    Discord::worker_thread(worker_rx, ctx.http.clone().to_owned());
+                    cache_clone
+                        .lock()
+                        .await
+                        .replace(LocalCache::new(ctx.http.clone()));
 
-                    Discord::new_data_thread(worker_clone, calendar_rx, calendar_cache);
+                    Discord::new_data_thread(calendar_rx, cache_clone.clone());
 
                     debug!("Registering commands..");
                     poise::builtins::register_globally(ctx, &framework.options().commands).await?;
@@ -148,16 +144,20 @@ impl Discord {
     }
 
     fn new_data_thread(
-        worker_tx: mpsc::Sender<Command>,
         mut calendar_rx: mpsc::Receiver<UpdateCalendarEvent>,
-        calendar_cache: Arc<Mutex<BTreeMap<String, Vec<Event>>>>,
+        cache: Arc<Mutex<Option<LocalCache>>>,
     ) {
         tokio::spawn(async move {
+            let mut events_cache: BTreeMap<String, Vec<Event>> = BTreeMap::new();
+            let mut message_cache: BTreeMap<String, u64> = BTreeMap::new();
+            let channel = serenity::ChannelId::new(1102198299093647470);
+
             while let Some(event) = calendar_rx.recv().await {
                 debug!("Received event for calendar {}", event.calendar_id);
 
-                let mut cache = calendar_cache.lock().await;
-                let events = cache.entry(event.calendar_id.clone()).or_insert(Vec::new());
+                let events = events_cache
+                    .entry(event.calendar_id.clone())
+                    .or_insert(Vec::new());
                 let matching = events
                     .iter()
                     .zip(event.new_events.iter())
@@ -178,39 +178,56 @@ impl Discord {
                     continue;
                 }
 
-                let embed = Discord::event_to_embed(event.new_events.clone());
-                let message = match embed {
-                    Ok(embed) => serenity::CreateMessage::new().add_embed(embed),
-                    Err(_) => serenity::CreateMessage::new().content("Error creating embed"),
+                let cache = cache.as_ref().lock().await.clone().unwrap();
+                let embed = match Discord::event_to_embed(event.new_events.clone()) {
+                    Ok(v) => v,
+                    Err(_) => serenity::CreateEmbed::new().title("Events").field(
+                        "Error",
+                        "Error getting events",
+                        true,
+                    ),
                 };
+
+                let mut create_new_message = false;
+                if let Entry::Occupied(o) = message_cache.entry(event.calendar_id.clone()) {
+                    let message_id = serenity::MessageId::new(o.get().clone());
+
+                    let err = cache
+                        .client
+                        .edit_message(
+                            channel,
+                            message_id,
+                            &serenity::EditMessage::new().add_embed(embed.clone()),
+                            Vec::new(),
+                        )
+                        .await;
+
+                    match err {
+                        Err(e) => {
+                            error!("Failed to edit message ({}): {}", message_id.clone(), e);
+                            create_new_message = true;
+                        }
+                        _ => (),
+                    };
+                } else {
+                    create_new_message = true;
+                }
+
+                if create_new_message {
+                    let res = channel
+                        .send_message(cache, serenity::CreateMessage::new().add_embed(embed))
+                        .await
+                        .unwrap();
+
+                    message_cache
+                        .entry(event.calendar_id.clone())
+                        .or_insert(res.id.get());
+                }
 
                 if !events.is_empty() {
                     events.clear();
                 }
                 events.extend(event.new_events.clone());
-
-                worker_tx
-                    .send(Command::SendChannel {
-                        id: 1102198299093647470,
-                        message,
-                    })
-                    .await
-                    .unwrap();
-            }
-        });
-    }
-
-    fn worker_thread(mut worker_rx: mpsc::Receiver<Command>, http: Arc<serenity::Http>) {
-        tokio::spawn(async move {
-            while let Some(cmd) = worker_rx.recv().await {
-                let cache = LocalCache::new(http.clone());
-                match cmd {
-                    Command::SendChannel { id, message } => {
-                        debug!("Sending message to channel {}", id);
-                        let channel = serenity::ChannelId::new(id);
-                        channel.send_message(cache, message).await.unwrap();
-                    }
-                };
             }
         });
     }
