@@ -7,7 +7,6 @@ use calendar3::{chrono, hyper, hyper_rustls, oauth2, CalendarHub, Result};
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
-use log::debug;
 use tokio::sync::mpsc::Sender;
 
 pub struct GCalendar {

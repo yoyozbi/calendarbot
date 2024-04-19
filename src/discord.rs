@@ -4,7 +4,7 @@ use crate::commands;
 use crate::types;
 use anyhow::{Error, Result};
 use google_calendar3::api::Event;
-use google_calendar3::chrono::NaiveDate;
+use google_calendar3::chrono::{Datelike, NaiveDate, Utc};
 use log::{debug, error, info};
 use poise::serenity_prelude as serenity;
 use std::collections::btree_map::Entry;
@@ -233,18 +233,19 @@ impl Discord {
     }
 
     fn event_to_embed(events: Vec<Event>) -> Result<serenity::CreateEmbed> {
-        let mut sorted: BTreeMap<NaiveDate, Vec<Event>> = BTreeMap::new();
+        let mut sorted: BTreeMap<(NaiveDate, NaiveDate), Vec<Event>> = BTreeMap::new();
         let mut fields: Vec<(String, String, bool)> = vec![];
         for ele in events {
-            let start = ele.clone().start.unwrap();
-            let date = start.date_time.unwrap();
+            let ele_clone = ele.clone();
+            let start_date = ele_clone.start.unwrap().date_time.unwrap();
+            let end_date = ele.clone().end.unwrap().date_time.unwrap();
             sorted
-                .entry(date.date_naive())
+                .entry((start_date.date_naive(), end_date.date_naive()))
                 .or_insert(Vec::new())
                 .push(ele);
         }
 
-        for (date, events) in sorted.iter() {
+        for ((start_date, end_date), events) in sorted.iter() {
             let mut field = String::new();
             for event in events {
                 field.push_str(&format!(
@@ -266,7 +267,22 @@ impl Discord {
                     event.summary.clone().unwrap()
                 ));
             }
-            fields.push((date.format("**%A** - %e %B").to_string(), field, false));
+            let mut format = String::from("**%A** - %e %B");
+            if start_date.year() != end_date.year() || start_date.year() != Utc::now().year() {
+                format.push_str(" %Y");
+            }
+
+            let mut key = start_date.format(&format.clone()).to_string();
+
+            if start_date.format("%F").to_string() != end_date.format("%F").to_string() {
+                key.push_str(
+                    &end_date
+                        .format(format!(" // {}", format.clone()).as_str())
+                        .to_string(),
+                );
+            }
+
+            fields.push((key, field, false));
         }
 
         Ok(serenity::CreateEmbed::new().title("Events").fields(fields))
