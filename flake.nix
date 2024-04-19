@@ -33,24 +33,24 @@
               inherit inputs pkgs;
               modules = [
                 {
-                  pre-commit.hooks = {
-										cargo-check.enable = true;
-										rustfmt.enable = true;
-										docker = {
-											enable = true;
-											name ="Docker linting";
-											entry = "ghcr.io/hadolint/hadolint hadolint ./Dockerfile";
-											files="Dockerfile";
-											language="docker_image";
-											pass_filenames = false;
-										};
-				  				};
+                    pre-commit.hooks = {
+                        cargo-check.enable = true;
+                        rustfmt.enable = true;
+                        docker = {
+                            enable = true;
+                            name ="Docker linting";
+                            entry = "ghcr.io/hadolint/hadolint hadolint ./Dockerfile";
+                            files="Dockerfile";
+                            language="docker_image";
+                            pass_filenames = false;
+                        };
+				  };
                   # https://devenv.sh/reference/options/
-                  packages = [ pkgs.openssl.dev pkgs.pkgconfig pkgs.dbus.dev pkgs.postgresql pkgs.hadolint ];
+                  packages = [ pkgs.openssl.dev pkgs.pkgconfig pkgs.dbus.dev pkgs.postgresql pkgs.hadolint  pkgs.diesel-cli];
                   languages.rust = {
                     enable = true;
                     channel = "stable";
-										components = ["rustfmt" "clippy"];
+										components = ["rustfmt" "clippy" "rust-analyzer"];
                   };
                   env.OPENSSL_DEV=pkgs.openssl.dev;
                 }
