@@ -7,6 +7,7 @@ use calendar3::{chrono, hyper, hyper_rustls, oauth2, CalendarHub, Result};
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
+use log::debug;
 use tokio::sync::mpsc::Sender;
 
 pub struct GCalendar {
@@ -73,5 +74,16 @@ impl GCalendar {
                 .await
                 .expect("Unable to send events");
         }
+    }
+
+    pub fn compare_event(a: &calendar3::api::Event, b: &calendar3::api::Event) -> bool {
+        a.id == b.id
+            && a.summary == b.summary
+            && a.description == b.description
+            && a.location == b.location
+            && a.start.as_ref().unwrap().date_time.as_ref().unwrap()
+                == b.start.as_ref().unwrap().date_time.as_ref().unwrap()
+            && a.end.as_ref().unwrap().date_time.as_ref().unwrap()
+                == b.end.as_ref().unwrap().date_time.as_ref().unwrap()
     }
 }

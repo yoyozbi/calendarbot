@@ -58,11 +58,11 @@ async fn main() {
         loop {
             info!("Updating calendars");
             g_client.update_calendars(tx.clone()).await;
-            thread::sleep(Duration::from_secs(5));
+            thread::sleep(Duration::from_secs(10));
         }
     });
 
-    let mut client = discord::Discord::new(token, data, intents, rx).init().await;
+    let mut client = discord::Discord::new(token, intents).init(rx, data).await;
 
     if let Err(why) = client.start().await {
         println!("An error occured while running the client: {:?}", why);
