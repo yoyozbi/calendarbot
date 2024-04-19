@@ -256,20 +256,20 @@ impl Discord {
                         .unwrap()
                         .date_time
                         .unwrap()
-                        .format("%H:%m"),
+                        .format("%H:%M"),
                     event
                         .end
                         .clone()
                         .unwrap()
                         .date_time
                         .unwrap()
-                        .format("%H:%m"),
+                        .format("%H:%M"),
                     event.summary.clone().unwrap()
                 ));
             }
             let mut format = String::from("**%A** - %e %B");
             if start_date.year() != end_date.year() || start_date.year() != Utc::now().year() {
-                format.push_str(" %Y");
+                format = String::from("%F");
             }
 
             let mut key = start_date.format(&format.clone()).to_string();
